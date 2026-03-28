@@ -1,6 +1,7 @@
 use std::path::Path;
 
 use rusqlite::{params, Connection, Result as SqliteResult};
+use serde::Serialize;
 use sha2::{Digest, Sha256};
 use tracing::info;
 
@@ -12,7 +13,7 @@ pub struct DanmakuDb {
 }
 
 /// Video metadata
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct VideoInfo {
     pub id: i64,
     pub video_id: String,

@@ -1,8 +1,10 @@
+mod cache;
 mod crawler;
 mod db;
 mod models;
 mod parser;
 mod result;
+mod server;
 mod throttle;
 
 use clap::{Parser, Subcommand};
@@ -23,6 +25,10 @@ struct Cli {
     /// Database path
     #[arg(long, default_value = DEFAULT_DB_PATH)]
     db: String,
+
+    /// Redis URL for caching (e.g., redis://127.0.0.1:6379)
+    #[arg(long)]
+    redis: Option<String>,
 
     #[command(subcommand)]
     command: Commands,
@@ -83,8 +89,14 @@ async fn main() -> anyhow::Result<()> {
 
     let cli = Cli::parse();
     let db = DanmakuDb::new(&cli.db)?;
-    let client = Client::new();
+    let client = Client::builder()
+        .no_gzip()
+        .no_deflate()
+        .build()?;
     let throttle = bilibili_throttle();
+    let cache = cache::create_cache(cli.redis.as_deref()).await;
+    let (tx, _) = tokio::sync::broadcast::channel::<models::Danmaku>(100);
+    let tx_clone = tx.clone();
 
     match cli.command {
         Commands::Fetch { video, save } => {
@@ -107,6 +119,13 @@ async fn main() -> anyhow::Result<()> {
             }
 
             print_danmakus(&standard_danmakus);
+            
+            // Broadcast first danmaku via WebSocket (if any)
+            if let Some(first_danmaku) = standard_danmakus.first() {
+                if let Err(e) = tx_clone.send(first_danmaku.clone()) {
+                    info!("No WebSocket listeners: {}", e);
+                }
+            }
         }
         Commands::FetchByCid { cid, save } => {
             info!("Fetching danmaku by cid: {}", cid);
@@ -123,6 +142,13 @@ async fn main() -> anyhow::Result<()> {
             }
 
             print_danmakus(&standard_danmakus);
+            
+            // Broadcast first danmaku via WebSocket (if any)
+            if let Some(first_danmaku) = standard_danmakus.first() {
+                if let Err(e) = tx_clone.send(first_danmaku.clone()) {
+                    info!("No WebSocket listeners: {}", e);
+                }
+            }
         }
         Commands::List => {
             let videos = db.list_videos()?;
@@ -180,7 +206,7 @@ async fn main() -> anyhow::Result<()> {
         }
         Commands::Serve { port } => {
             info!("Starting server on port {}...", port);
-            println!("Server not yet implemented. Use 'fetch' command instead.");
+            server::start_server(db, port, cache, tx).await?;
         }
     }
 
