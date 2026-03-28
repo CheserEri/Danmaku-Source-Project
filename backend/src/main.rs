@@ -1,15 +1,19 @@
 mod crawler;
 mod models;
 mod parser;
+mod result;
+mod throttle;
 
 use clap::{Parser, Subcommand};
 use reqwest::Client;
-use tracing::{info, error};
+use tracing::info;
 use tracing_subscriber::EnvFilter;
+
+use crate::throttle::bilibili_throttle;
 
 #[derive(Parser)]
 #[command(name = "danmaku-server")]
-#[command(version = "1.1.1")]
+#[command(version = "1.1.2")]
 #[command(about = "Danmaku Source Project - Backend Server")]
 struct Cli {
     #[command(subcommand)]
@@ -30,6 +34,12 @@ enum Commands {
         #[arg(short, long)]
         cid: String,
     },
+    /// Fetch danmaku using protobuf format (newer API)
+    FetchProto {
+        /// Bilibili cid (comment ID)
+        #[arg(short, long)]
+        cid: String,
+    },
     /// Start the HTTP API server
     Serve {
         /// Port to listen on
@@ -45,59 +55,48 @@ async fn main() -> anyhow::Result<()> {
         .init();
 
     let cli = Cli::parse();
+    let client = Client::new();
+    let throttle = bilibili_throttle();
 
     match cli.command {
         Commands::Fetch { video } => {
             info!("Fetching danmaku for video: {}", video);
-            let client = Client::new();
 
             let video_id = crawler::parse_video_id(&video)?;
             info!("Parsed video ID: {}", video_id);
 
-            let cid = crawler::get_video_cid(&video_id, &client).await?;
-            let xml_data = crawler::fetch_danmaku_xml(&cid, &client).await?;
+            let cid = crawler::get_video_cid(&video_id, &client, &throttle).await?;
+            let xml_data = crawler::fetch_danmaku_xml(&cid, &client, &throttle).await?;
 
             let raw_danmakus = parser::parse_bilibili_xml(&xml_data)?;
             let standard_danmakus: Vec<models::Danmaku> =
                 raw_danmakus.iter().map(|d| d.to_standard()).collect();
 
-            println!("Fetched {} danmakus:", standard_danmakus.len());
-            println!("{:-<60}", "");
-            for (i, danmaku) in standard_danmakus.iter().enumerate() {
-                println!(
-                    "[{:>6.1}s] [{:>8}] {}",
-                    danmaku.time, danmaku.danmaku_type, danmaku.content
-                );
-                if i >= 50 {
-                    println!("... and {} more danmakus", standard_danmakus.len() - 51);
-                    break;
-                }
-            }
-            println!("{:-<60}", "");
-            println!("Total: {} danmakus", standard_danmakus.len());
+            print_danmakus(&standard_danmakus);
         }
         Commands::FetchByCid { cid } => {
             info!("Fetching danmaku by cid: {}", cid);
 
-            let xml_data = crawler::fetch_danmaku_by_cid(&cid).await?;
+            let xml_data = crawler::fetch_danmaku_xml(&cid, &client, &throttle).await?;
             let raw_danmakus = parser::parse_bilibili_xml(&xml_data)?;
             let standard_danmakus: Vec<models::Danmaku> =
                 raw_danmakus.iter().map(|d| d.to_standard()).collect();
 
-            println!("Fetched {} danmakus:", standard_danmakus.len());
-            println!("{:-<60}", "");
-            for (i, danmaku) in standard_danmakus.iter().enumerate() {
-                println!(
-                    "[{:>6.1}s] [{:>8}] {}",
-                    danmaku.time, danmaku.danmaku_type, danmaku.content
-                );
-                if i >= 50 {
-                    println!("... and {} more danmakus", standard_danmakus.len() - 51);
-                    break;
+            print_danmakus(&standard_danmakus);
+        }
+        Commands::FetchProto { cid } => {
+            info!("Fetching danmaku protobuf by cid: {}", cid);
+
+            match crawler::fetch_danmaku_protobuf(&cid, &client, &throttle).await {
+                Ok(bytes) => {
+                    println!("Fetched {} bytes of protobuf data", bytes.len());
+                    println!("Protobuf decoding not yet implemented in CLI.");
+                    println!("Use 'fetch-by-cid' for XML format.");
+                }
+                Err(e) => {
+                    eprintln!("Error: {}", e);
                 }
             }
-            println!("{:-<60}", "");
-            println!("Total: {} danmakus", standard_danmakus.len());
         }
         Commands::Serve { port } => {
             info!("Starting server on port {}...", port);
@@ -106,4 +105,21 @@ async fn main() -> anyhow::Result<()> {
     }
 
     Ok(())
+}
+
+fn print_danmakus(danmakus: &[models::Danmaku]) {
+    println!("Fetched {} danmakus:", danmakus.len());
+    println!("{:-<60}", "");
+    for (i, danmaku) in danmakus.iter().enumerate() {
+        println!(
+            "[{:>6.1}s] [{:>8}] {}",
+            danmaku.time, danmaku.danmaku_type, danmaku.content
+        );
+        if i >= 50 {
+            println!("... and {} more danmakus", danmakus.len() - 51);
+            break;
+        }
+    }
+    println!("{:-<60}", "");
+    println!("Total: {} danmakus", danmakus.len());
 }
