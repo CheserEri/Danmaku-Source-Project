@@ -1,0 +1,8 @@
+/target
+backend/target/
+*.log
+.env
+*.db
+damudownload/
+client/danmaku_client/build/
+client/danmaku_client/.dart_tool/
