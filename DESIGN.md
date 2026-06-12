@@ -68,213 +68,415 @@
 
 ### 1. 影视剧 (Series)
 
-```rust
-pub struct Series {
-    pub id: i64,
-    pub title: String,              // 标题
-    pub original_title: Option<String>, // 原始标题
-    pub aliases: Vec<String>,       // 别名
-    pub description: Option<String>, // 简介
-    pub cover_url: Option<String>,  // 封面URL
-    pub backdrop_url: Option<String>, // 背景图URL
-    pub series_type: SeriesType,    // 类型：电影/电视剧/动漫/综艺
-    pub genres: Vec<String>,        // 类型标签：动作、喜剧、爱情等
-    pub country: Option<String>,    // 国家/地区
-    pub language: Option<String>,   // 语言
-    pub release_date: Option<String>, // 首播日期
-    pub year: Option<i32>,          // 年份
-    pub status: SeriesStatus,       // 状态：连载中/已完结
-    pub rating: Option<f64>,        // 评分
-    pub rating_count: Option<i64>,  // 评分人数
-    pub popularity: Option<f64>,    // 热度
-    pub tags: Vec<String>,          // 标签
-    pub created_at: String,
-    pub updated_at: String,
+```java
+@Data
+@Entity
+@Table(name = "series")
+public class Series {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    private String title;              // 标题
+    private String originalTitle;      // 原始标题
+    private String description;        // 简介
+    private String coverUrl;           // 封面URL
+    private String backdropUrl;        // 背景图URL
+    
+    @Enumerated(EnumType.STRING)
+    private SeriesType seriesType;     // 类型：电影/电视剧/动漫/综艺
+    
+    private String genres;             // JSON数组：["动作","喜剧"]
+    private String country;            // 国家/地区
+    private String language;           // 语言
+    private String releaseDate;        // 首播日期
+    private Integer year;              // 年份
+    
+    @Enumerated(EnumType.STRING)
+    private SeriesStatus status;       // 状态：连载中/已完结
+    
+    private Double rating;             // 评分
+    private Long ratingCount;          // 评分人数
+    private Double popularity;         // 热度
+    private String tags;               // JSON数组
+    
+    @CreationTimestamp
+    private LocalDateTime createdAt;
+    
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
 }
 
-pub enum SeriesType {
-    Movie,      // 电影
-    TvSeries,   // 电视剧
-    Anime,      // 动漫
-    Variety,    // 综艺
-    Documentary,// 纪录片
+public enum SeriesType {
+    MOVIE,      // 电影
+    TV_SERIES,  // 电视剧
+    ANIME,      // 动漫
+    MUSIC,      // 音乐
+    VARIETY,    // 综艺
+    DOCUMENTARY // 纪录片
 }
 
-pub enum SeriesStatus {
-    Airing,     // 连载中
-    Completed,  // 已完结
-    Upcoming,   // 即将上映
+public enum SeriesStatus {
+    AIRING,     // 连载中
+    COMPLETED,  // 已完结
+    UPCOMING,   // 即将上映
+}
+```
+
+### 1.1 分类视觉主题
+
+```java
+@Data
+public class CategoryTheme {
+    private String category;           // 分类代码
+    private String name;               // 分类名称
+    private String icon;               // 图标
+    private String primaryColor;       // 主色调
+    private String gradientStart;      // 渐变起始色
+    private String gradientEnd;        // 渐变结束色
+    private String backgroundPattern;  // 背景图案
+    private String cardStyle;          // 卡片样式
+}
+
+// 预设主题配置
+public enum CategoryThemeConfig {
+    MOVIE("movie", "电影", "🎬", "#E50914", "#1a0000", "#4a0000", "film-grain", "cinema"),
+    TV_SERIES("tv_series", "电视剧", "📺", "#FF6B35", "#1a0a00", "#4a1a00", "wave", "standard"),
+    ANIME("anime", "动漫", "🎨", "#FF69B4", "#1a001a", "#4a004a", "sakura", "anime"),
+    MUSIC("music", "音乐", "🎵", "#1DB954", "#001a0a", "#004a1a", "sound-wave", "album"),
+    VARIETY("variety", "综艺", "🎭", "#FFD700", "#1a1a00", "#4a4a00", "spotlight", "bright"),
+    DOCUMENTARY("documentary", "纪录片", "📹", "#4169E1", "#000a1a", "#001a4a", "film-strip", "minimal");
+    
+    private final String code;
+    private final String name;
+    private final String icon;
+    private final String primaryColor;
+    private final String gradientStart;
+    private final String gradientEnd;
+    private final String backgroundPattern;
+    private final String cardStyle;
 }
 ```
 
 ### 2. 剧集 (Episode)
 
-```rust
-pub struct Episode {
-    pub id: i64,
-    pub series_id: i64,             // 关联影视剧ID
-    pub season_number: i32,         // 季数
-    pub episode_number: i32,        // 集数
-    pub title: Option<String>,      // 集标题
-    pub description: Option<String>, // 集简介
-    pub cover_url: Option<String>,  // 集封面
-    pub duration: Option<i32>,      // 时长（秒）
-    pub air_date: Option<String>,   // 播出日期
-    pub created_at: String,
+```java
+@Data
+@Entity
+@Table(name = "episodes")
+public class Episode {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    private Long seriesId;             // 关联影视剧ID
+    private Integer seasonNumber;      // 季数
+    private Integer episodeNumber;     // 集数
+    private String title;              // 集标题
+    private String description;        // 集简介
+    private String coverUrl;           // 集封面
+    private Integer duration;          // 时长（秒）
+    private String airDate;            // 播出日期
+    
+    @CreationTimestamp
+    private LocalDateTime createdAt;
+}
+```
+
+### 2.1 更新时间表 (UpdateSchedule)
+
+```java
+@Data
+@Entity
+@Table(name = "update_schedules")
+public class UpdateSchedule {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    private Long seriesId;             // 关联影视剧ID
+    
+    @Enumerated(EnumType.STRING)
+    private DayOfWeek dayOfWeek;       // 更新星期：MONDAY~SUNDAY
+    
+    private String updateTime;         // 更新时间，如 "20:00"
+    private Integer episodeCount;      // 本集数（第几集）
+    private String seasonInfo;         // 季信息，如 "第二季"
+    private String platform;           // 更新平台：bilibili/tencent/iqiyi
+    private String remark;             // 备注，如 "会员提前看"
+    
+    @Enumerated(EnumType.STRING)
+    private ScheduleStatus status;     // 状态
+    
+    @CreationTimestamp
+    private LocalDateTime createdAt;
+    
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
+}
+
+public enum DayOfWeek {
+    MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY
+}
+
+public enum ScheduleStatus {
+    AIRING,      // 连载中
+    PAUSED,      // 暂停
+    COMPLETED,   // 已完结
+    CANCELLED    // 已取消
+}
+
+// 更新时间表查询结果
+@Data
+public class ScheduleVO {
+    private Long seriesId;
+    private String title;
+    private String coverUrl;
+    private SeriesType seriesType;
+    private Double rating;
+    private DayOfWeek dayOfWeek;
+    private String updateTime;
+    private Integer episodeCount;
+    private String seasonInfo;
+    private String platform;
+    private String remark;
+    private LocalDateTime nextUpdate;  // 下次更新时间
+    private Boolean isToday;           // 是否今天更新
 }
 ```
 
 ### 3. 演职人员 (Cast)
 
-```rust
-pub struct Person {
-    pub id: i64,
-    pub name: String,               // 姓名
-    pub original_name: Option<String>, // 原名
-    pub avatar_url: Option<String>, // 头像
-    pub biography: Option<String>,  // 简介
-    pub birthday: Option<String>,   // 生日
-    pub place_of_birth: Option<String>, // 出生地
+```java
+@Data
+@Entity
+@Table(name = "persons")
+public class Person {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    private String name;               // 姓名
+    private String originalName;       // 原名
+    private String avatarUrl;          // 头像
+    private String biography;          // 简介
+    private String birthday;           // 生日
+    private String placeOfBirth;       // 出生地
 }
 
-pub struct SeriesCast {
-    pub series_id: i64,
-    pub person_id: i64,
-    pub role: String,               // 角色名
-    pub cast_type: CastType,        // 类型：演员/导演/编剧
-    pub order: i32,                 // 排序
+@Data
+@Entity
+@Table(name = "series_cast")
+public class SeriesCast {
+    @EmbeddedId
+    private SeriesCastId id;
+    
+    private String role;               // 角色名
+    
+    @Enumerated(EnumType.STRING)
+    private CastType castType;         // 类型：演员/导演/编剧
+    
+    private Integer order;             // 排序
 }
 
-pub enum CastType {
-    Actor,      // 演员
-    Director,   // 导演
-    Screenwriter, // 编剧
-    Producer,   // 制片人
+public enum CastType {
+    ACTOR,         // 演员
+    DIRECTOR,      // 导演
+    SCREENWRITER,  // 编剧
+    PRODUCER       // 制片人
 }
 ```
 
 ### 4. 弹幕 (Danmaku) - 已有，需扩展
 
-```rust
-pub struct Danmaku {
-    pub id: i64,
-    pub episode_id: i64,            // 关联剧集ID
-    pub time: f64,                  // 统一后的时间点（秒）
-    pub content: String,            // 内容
-    pub danmaku_type: String,       // 类型：滚动/顶部/底部
-    pub color: String,              // 颜色
-    pub font_size: Option<i32>,     // 字体大小
-    pub source: String,             // 来源平台: bilibili/tencent/user
-    pub source_id: Option<String>,  // 来源平台弹幕ID
-    pub source_time: Option<f64>,   // 原始时间点（秒，平台原始值）
-    pub user_id: Option<String>,    // 用户ID（本地用户发送的弹幕）
-    pub user_hash: Option<String>,  // 用户哈希（第三方平台）
-    pub ip_address: Option<String>, // IP地址（可选，用于反垃圾）
-    pub is_local: bool,             // 是否本地用户发送
-    pub created_at: String,
+```java
+@Data
+@Entity
+@Table(name = "danmakus")
+public class DanmakuEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    private Long episodeId;            // 关联剧集ID
+    private Double time;               // 统一后的时间点（秒）
+    private String content;            // 内容
+    
+    @Enumerated(EnumType.STRING)
+    private DanmakuType danmakuType;   // 类型：滚动/顶部/底部
+    
+    private String color;              // 颜色
+    private Integer fontSize;          // 字体大小
+    
+    @Enumerated(EnumType.STRING)
+    private DanmakuSource source;      // 来源平台
+    
+    private String sourceId;           // 来源平台弹幕ID
+    private Double sourceTime;         // 原始时间点（秒）
+    private String userId;             // 用户ID（本地用户发送的弹幕）
+    private String userHash;           // 用户哈希（第三方平台）
+    private String ipAddress;          // IP地址
+    private Boolean isLocal;           // 是否本地用户发送
+    private Boolean isMerged;          // 是否已合并
+    private String mergeGroup;         // 合并组
+    
+    @CreationTimestamp
+    private LocalDateTime createdAt;
 }
 
-pub enum DanmakuSource {
-    Bilibili,   // B站
-    Tencent,    // 腾讯视频
-    IQiyi,      // 爱奇艺
-    Youku,      // 优酷
-    User,       // 本地用户发送
-    Import,     // 导入的第三方弹幕
+public enum DanmakuType {
+    SCROLL,  // 滚动
+    TOP,     // 顶部
+    BOTTOM,  // 底部
+    LTR      // 逆向
+}
+
+public enum DanmakuSource {
+    BILIBILI,  // B站
+    TENCENT,   // 腾讯视频
+    IQIYI,     // 爱奇艺
+    YOUKU,     // 优酷
+    USER,      // 本地用户发送
+    IMPORT     // 导入的第三方弹幕
 }
 ```
 
 ### 4.1 跨平台弹幕统一模型
 
-```rust
+```java
 // 平台时间偏移配置
-pub struct PlatformTimeOffset {
-    pub id: i64,
-    pub episode_id: i64,
-    pub platform: String,           // 平台代码
-    pub offset_seconds: f64,        // 时间偏移量（秒）
-    pub offset_type: OffsetType,    // 偏移类型
-    pub confidence: f64,            // 置信度 (0.0-1.0)
-    pub created_at: String,
-    pub updated_at: String,
+@Data
+@Entity
+@Table(name = "platform_time_offsets")
+public class PlatformTimeOffset {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    private Long episodeId;
+    private String platform;           // 平台代码
+    private Double offsetSeconds;      // 时间偏移量（秒）
+    
+    @Enumerated(EnumType.STRING)
+    private OffsetType offsetType;     // 偏移类型
+    
+    private Double confidence;         // 置信度 (0.0-1.0)
+    
+    @CreationTimestamp
+    private LocalDateTime createdAt;
+    
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
 }
 
-pub enum OffsetType {
-    Manual,     // 手动设置
-    Auto,       // 自动计算
-    Verified,   // 已验证
+public enum OffsetType {
+    MANUAL,    // 手动设置
+    AUTO,      // 自动计算
+    VERIFIED   // 已验证
 }
 
 // 弹幕匹配记录（用于跨平台去重）
-pub struct DanmakuMatch {
-    pub id: i64,
-    pub danmaku_id_1: i64,          // 弹幕1 ID
-    pub danmaku_id_2: i64,          // 弹幕2 ID
-    pub similarity: f64,            // 相似度 (0.0-1.0)
-    pub match_type: MatchType,      // 匹配类型
-    pub created_at: String,
+@Data
+@Entity
+@Table(name = "danmaku_matches")
+public class DanmakuMatch {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    private Long danmakuId1;           // 弹幕1 ID
+    private Long danmakuId2;           // 弹幕2 ID
+    private Double similarity;         // 相似度 (0.0-1.0)
+    
+    @Enumerated(EnumType.STRING)
+    private MatchType matchType;       // 匹配类型
+    
+    @CreationTimestamp
+    private LocalDateTime createdAt;
 }
 
-pub enum MatchType {
-    Exact,      // 完全相同
-    Similar,    // 相似内容
-    TimeSync,   // 时间同步
+public enum MatchType {
+    EXACT,     // 完全相同
+    SIMILAR,   // 相似内容
+    TIME_SYNC  // 时间同步
 }
 
 // 剧集弹幕统计
-pub struct EpisodeDanmakuStats {
-    pub episode_id: i64,
-    pub total_count: i64,           // 总弹幕数
-    pub source_counts: HashMap<String, i64>,  // 各平台弹幕数
-    pub merged_count: i64,          // 合并后的弹幕数
-    pub duplicate_count: i64,       // 重复弹幕数
+@Data
+public class EpisodeDanmakuStats {
+    private Long episodeId;
+    private Long totalCount;           // 总弹幕数
+    private Map<String, Long> sourceCounts;  // 各平台弹幕数
+    private Long mergedCount;          // 合并后的弹幕数
+    private Long duplicateCount;       // 重复弹幕数
 }
 ```
 
 ### 5. 平台信息 (Platform)
 
-```rust
-pub struct Platform {
-    pub id: i64,
-    pub name: String,               // 平台名称
-    pub code: String,               // 平台代码：bilibili/tencent/iqiyi/youku
-    pub base_url: Option<String>,   // 平台URL
-    pub icon_url: Option<String>,   // 平台图标
+```java
+@Data
+@Entity
+@Table(name = "platforms")
+public class Platform {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    private String name;               // 平台名称
+    private String code;               // 平台代码：bilibili/tencent/iqiyi/youku
+    private String baseUrl;            // 平台URL
+    private String iconUrl;            // 平台图标
 }
 
-pub struct SeriesPlatform {
-    pub series_id: i64,
-    pub platform_id: i64,
-    pub platform_series_id: String, // 平台上的影视剧ID
-    pub platform_url: Option<String>, // 平台链接
-    pub is_available: bool,         // 是否可用
+@Data
+@Entity
+@Table(name = "series_platforms")
+public class SeriesPlatform {
+    @EmbeddedId
+    private SeriesPlatformId id;
+    
+    private String platformSeriesId;   // 平台上的影视剧ID
+    private String platformUrl;        // 平台链接
+    private Boolean isAvailable;       // 是否可用
 }
 ```
 
 ### 6. 图片资源 (Image)
 
-```rust
-pub struct Image {
-    pub id: i64,
-    pub series_id: Option<i64>,
-    pub episode_id: Option<i64>,
-    pub person_id: Option<i64>,
-    pub image_type: ImageType,      // 类型：封面/海报/剧照/头像
-    pub url: String,                // 图片URL
-    pub local_path: Option<String>, // 本地路径
-    pub width: Option<i32>,
-    pub height: Option<i32>,
-    pub size: Option<i64>,          // 文件大小
-    pub source: String,             // 来源
-    pub created_at: String,
+```java
+@Data
+@Entity
+@Table(name = "images")
+public class Image {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    private Long seriesId;
+    private Long episodeId;
+    private Long personId;
+    
+    @Enumerated(EnumType.STRING)
+    private ImageType imageType;       // 类型：封面/海报/剧照/头像
+    
+    private String url;                // 图片URL
+    private String localPath;          // 本地路径
+    private Integer width;
+    private Integer height;
+    private Long size;                 // 文件大小
+    private String source;             // 来源
+    
+    @CreationTimestamp
+    private LocalDateTime createdAt;
 }
 
-pub enum ImageType {
-    Cover,      // 封面
-    Poster,     // 海报
-    Backdrop,   // 背景图
-    Still,      // 剧照
-    Avatar,     // 头像
+public enum ImageType {
+    COVER,     // 封面
+    POSTER,    // 海报
+    BACKDROP,  // 背景图
+    STILL,     // 剧照
+    AVATAR     // 头像
 }
 ```
 
@@ -284,25 +486,24 @@ pub enum ImageType {
 
 ### 1. 元数据 Provider
 
-```rust
-#[async_trait]
-pub trait MetadataProvider: Send + Sync {
-    fn name(&self) -> &str;
+```java
+public interface MetadataProvider {
+    String getName();
     
     // 搜索影视剧
-    async fn search(&self, keyword: &str) -> Result<Vec<Series>>;
+    List<Series> search(String keyword) throws Exception;
     
     // 获取影视剧详情
-    async fn get_series_detail(&self, id: &str) -> Result<Series>;
+    Series getSeriesDetail(String id) throws Exception;
     
     // 获取剧集列表
-    async fn get_episodes(&self, series_id: &str) -> Result<Vec<Episode>>;
+    List<Episode> getEpisodes(String seriesId) throws Exception;
     
     // 获取演职人员
-    async fn get_cast(&self, series_id: &str) -> Result<Vec<SeriesCast>>;
+    List<SeriesCast> getCast(String seriesId) throws Exception;
     
     // 获取图片
-    async fn get_images(&self, series_id: &str) -> Result<Vec<Image>>;
+    List<Image> getImages(String seriesId) throws Exception;
 }
 ```
 
@@ -313,16 +514,15 @@ pub trait MetadataProvider: Send + Sync {
 
 ### 2. 弹幕 Provider - 已有，需扩展
 
-```rust
-#[async_trait]
-pub trait DanmakuProvider: Send + Sync {
-    fn name(&self) -> &str;
+```java
+public interface DanmakuProvider {
+    String getName();
     
     // 根据剧集获取弹幕
-    async fn fetch_danmaku(&self, episode_id: &str) -> Result<Vec<Danmaku>>;
+    List<DanmakuDto> fetchDanmaku(String episodeId) throws Exception;
     
     // 根据平台ID获取弹幕
-    async fn fetch_danmaku_by_platform_id(&self, platform_id: &str) -> Result<Vec<Danmaku>>;
+    List<DanmakuDto> fetchDanmakuByPlatformId(String platformId) throws Exception;
 }
 ```
 
@@ -333,16 +533,15 @@ pub trait DanmakuProvider: Send + Sync {
 
 ### 3. 图片 Provider
 
-```rust
-#[async_trait]
-pub trait ImageProvider: Send + Sync {
-    fn name(&self) -> &str;
+```java
+public interface ImageProvider {
+    String getName();
     
     // 下载图片
-    async fn download_image(&self, url: &str, save_path: &str) -> Result<Image>;
+    Image downloadImage(String url, String savePath) throws Exception;
     
     // 获取封面
-    async fn get_cover(&self, series_id: &str) -> Result<Image>;
+    Image getCover(String seriesId) throws Exception;
     
     // 获取海报
     async fn get_posters(&self, series_id: &str) -> Result<Vec<Image>>;
@@ -352,6 +551,106 @@ pub trait ImageProvider: Send + Sync {
 ---
 
 ## 📡 API 设计
+
+### 分类与筛选 API
+
+| 接口 | 方法 | 说明 |
+|------|------|------|
+| `/api/categories` | GET | 获取所有分类及主题配置 |
+| `/api/categories/{type}/theme` | GET | 获取分类主题 |
+| `/api/series/category/{type}` | GET | 按分类筛选影视剧 |
+| `/api/series/category/{type}/trending` | GET | 分类热门 |
+| `/api/series/category/{type}/latest` | GET | 分类最新 |
+
+#### 分类列表响应
+
+```json
+{
+  "categories": [
+    {
+      "code": "anime",
+      "name": "动漫",
+      "icon": "🎨",
+      "primaryColor": "#FF69B4",
+      "gradientStart": "#1a001a",
+      "gradientEnd": "#4a004a",
+      "backgroundPattern": "sakura",
+      "cardStyle": "anime",
+      "count": 1250
+    },
+    {
+      "code": "movie",
+      "name": "电影",
+      "icon": "🎬",
+      "primaryColor": "#E50914",
+      "gradientStart": "#1a0000",
+      "gradientEnd": "#4a0000",
+      "backgroundPattern": "film-grain",
+      "cardStyle": "cinema",
+      "count": 3420
+    }
+  ]
+}
+```
+
+### 更新时间表 API
+
+| 接口 | 方法 | 说明 |
+|------|------|------|
+| `/api/schedules/today` | GET | 今日更新 |
+| `/api/schedules/week` | GET | 本周更新表 |
+| `/api/schedules/week/{day}` | GET | 指定星期更新 |
+| `/api/schedules/series/{id}` | GET | 剧集更新时间 |
+| `/api/schedules` | POST | 设置更新时间 |
+
+#### 今日更新响应
+
+```json
+{
+  "day": "WEDNESDAY",
+  "date": "2026-06-12",
+  "schedules": [
+    {
+      "seriesId": 1,
+      "title": "进击的巨人 最终季",
+      "coverUrl": "https://...",
+      "seriesType": "ANIME",
+      "rating": 9.5,
+      "dayOfWeek": "WEDNESDAY",
+      "updateTime": "20:00",
+      "episodeCount": 87,
+      "seasonInfo": "最终季 Part.3",
+      "platform": "bilibili",
+      "remark": "会员提前看",
+      "nextUpdate": "2026-06-12T20:00:00",
+      "isToday": true
+    }
+  ],
+  "total": 5
+}
+```
+
+#### 本周更新表响应
+
+```json
+{
+  "weekStart": "2026-06-09",
+  "weekEnd": "2026-06-15",
+  "schedule": {
+    "MONDAY": [],
+    "TUESDAY": [],
+    "WEDNESDAY": [
+      { "seriesId": 1, "title": "进击的巨人", "updateTime": "20:00", "seriesType": "ANIME" }
+    ],
+    "THURSDAY": [],
+    "FRIDAY": [
+      { "seriesId": 2, "title": "三体", "updateTime": "21:00", "seriesType": "TV_SERIES" }
+    ],
+    "SATURDAY": [],
+    "SUNDAY": []
+  }
+}
+```
 
 ### 影视剧 API
 
@@ -909,7 +1208,23 @@ CREATE TABLE images (
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     FOREIGN KEY (series_id) REFERENCES series(id),
     FOREIGN KEY (episode_id) REFERENCES episodes(id),
-    FOREIGN KEY ( person_id) REFERENCES persons(id)
+    FOREIGN KEY (person_id) REFERENCES persons(id)
+);
+
+-- 更新时间表
+CREATE TABLE update_schedules (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    series_id INTEGER NOT NULL,
+    day_of_week TEXT NOT NULL,         -- MONDAY~SUNDAY
+    update_time TEXT NOT NULL,         -- 更新时间，如 "20:00"
+    episode_count INTEGER DEFAULT 0,   -- 当前集数
+    season_info TEXT,                  -- 季信息
+    platform TEXT,                     -- 更新平台
+    remark TEXT,                       -- 备注
+    status TEXT NOT NULL DEFAULT 'AIRING',  -- AIRING/PAUSED/COMPLETED/CANCELLED
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+    FOREIGN KEY (series_id) REFERENCES series(id)
 );
 
 -- 索引
@@ -996,21 +1311,131 @@ CREATE INDEX idx_merge_logs_episode ON merge_logs(episode_id);
 - [ ] 数据同步策略
 - [ ] 增量更新机制
 
+### 第九阶段：分类与时间表
+
+- [ ] 分类体系实现
+- [ ] 瀑布流组件
+- [ ] 更新时间表功能
+- [ ] 分类主题定制
+
+---
+
+## 🎨 前端设计
+
+### 页面结构
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                         导航栏                               │
+│  首页 | 动漫 | 电影 | 音乐 | 综艺 | 纪录片 | 搜索           │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │                    Hero 轮播                         │   │
+│  │              热门推荐 / 新番上线                      │   │
+│  └─────────────────────────────────────────────────────┘   │
+│                                                             │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │                 今日更新时间表                        │   │
+│  │  ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐           │   │
+│  │  │20:00│ │21:00│ │22:00│ │     │ │     │           │   │
+│  │  │动漫A│ │电影B│ │综艺C│ │     │ │     │           │   │
+│  │  └─────┘ └─────┘ └─────┘ └─────┘ └─────┘           │   │
+│  └─────────────────────────────────────────────────────┘   │
+│                                                             │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │                    瀑布流内容                         │   │
+│  │  ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐     │   │
+│  │  │      │ │      │ │      │ │      │ │      │     │   │
+│  │  │ 卡片 │ │ 卡片 │ │ 卡片 │ │ 卡片 │ │ 卡片 │     │   │
+│  │  │  A   │ │  B   │ │  C   │ │  D   │ │  E   │     │   │
+│  │  │      │ │      │ │      │ │      │ │      │     │   │
+│  │  └──────┘ └──────┘ └──────┘ └──────┘ └──────┘     │   │
+│  │  ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐     │   │
+│  │  │ 卡片 │ │ 卡片 │ │ 卡片 │ │ 卡片 │ │ 卡片 │     │   │
+│  │  │  F   │ │  G   │ │  H   │ │  I   │ │  J   │     │   │
+│  │  └──────┘ └──────┘ └──────┘ └──────┘ └──────┘     │   │
+│  └─────────────────────────────────────────────────────┘   │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 分类页面主题
+
+| 分类 | 主色调 | 背景效果 | 卡片风格 |
+|------|--------|----------|----------|
+| 动漫 | #FF69B4 (粉色) | 樱花飘落 | 圆角、柔和阴影 |
+| 电影 | #E50914 (红色) | 胶片颗粒 | 直角、硬朗阴影 |
+| 音乐 | #1DB954 (绿色) | 声波律动 | 圆形封面、渐变 |
+| 综艺 | #FFD700 (金色) | 聚光灯效 | 鲜艳、活泼 |
+| 纪录片 | #4169E1 (蓝色) | 胶片条纹 | 简约、克制 |
+
+### 瀑布流实现
+
+```typescript
+// 瀑布流组件
+interface WaterfallProps {
+  columns: number;           // 列数
+  gap: number;               // 间距
+  items: SeriesCard[];       // 内容列表
+  category: SeriesType;      // 分类
+  onLoadMore: () => void;    // 加载更多
+}
+
+// 内容卡片
+interface SeriesCard {
+  id: number;
+  title: string;
+  coverUrl: string;
+  seriesType: SeriesType;
+  rating: number;
+  status: SeriesStatus;
+  latestEpisode: string;     // "更新至第12集"
+  tags: string[];
+}
+```
+
+### 更新时间表组件
+
+```typescript
+// 周时间表
+interface WeekSchedule {
+  [key: string]: ScheduleItem[];  // MONDAY -> [...]
+}
+
+interface ScheduleItem {
+  seriesId: number;
+  title: string;
+  coverUrl: string;
+  updateTime: string;        // "20:00"
+  episodeCount: number;
+  platform: string;
+  seriesType: SeriesType;
+}
+
+// 时间轴展示
+TimelineView -> 横向时间轴，按小时排列
+  ┌────┬────┬────┬────┬────┬────┬────┬────┐
+  │10:00│11:00│12:00│13:00│14:00│15:00│16:00│17:00│
+  │    │    │    │    │    │    │    │    │
+  │ 🎬 │    │ 🎵 │    │    │ 📺 │    │ 🎭 │
+  └────┴────┴────┴────┴────┴────┴────┴────┘
+```
+
 ---
 
 ## 📦 技术栈
 
 | 组件 | 选型 | 说明 |
 |------|------|------|
-| 语言 | Rust | 高性能、内存安全 |
-| 异步运行时 | tokio | 异步IO |
-| Web框架 | axum | HTTP/WebSocket |
+| 语言 | Java 17 | 生态成熟、稳定可靠 |
+| 框架 | Spring Boot 3.2 | 微服务架构 |
 | 数据库 | SQLite | 本地存储 |
 | 缓存 | Redis | 可选 |
-| HTTP客户端 | reqwest | API调用 |
-| XML解析 | quick-xml | B站弹幕解析 |
-| 序列化 | serde/serde_json | JSON处理 |
-| 任务调度 | tokio-cron-scheduled | 定时任务 |
+| HTTP客户端 | OkHttp | API调用 |
+| XML解析 | Dom4j | B站弹幕解析 |
+| 序列化 | Jackson | JSON处理 |
+| API文档 | Knife4j | OpenAPI 3.0 |
 
 ---
 

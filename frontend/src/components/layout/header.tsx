@@ -11,11 +11,20 @@ interface UserInfo {
   roleLabel: string
 }
 
+const categories = [
+  { type: 'anime', name: '动漫', icon: '🎨' },
+  { type: 'movie', name: '电影', icon: '🎬' },
+  { type: 'music', name: '音乐', icon: '🎵' },
+  { type: 'variety', name: '综艺', icon: '🎭' },
+  { type: 'documentary', name: '纪录片', icon: '📹' },
+]
+
 export function Header() {
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [user, setUser] = useState<UserInfo | null>(null)
+  const [isCategoryOpen, setIsCategoryOpen] = useState(false)
 
   useEffect(() => {
     const stored = localStorage.getItem('user')
@@ -58,6 +67,36 @@ export function Header() {
             <a href="/" className="text-text-secondary hover:text-text-bright transition-colors">
               首页
             </a>
+            
+            {/* Category Dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => setIsCategoryOpen(!isCategoryOpen)}
+                className="text-text-secondary hover:text-text-bright transition-colors flex items-center gap-1"
+              >
+                分类
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              
+              {isCategoryOpen && (
+                <div className="absolute top-full left-0 mt-2 w-48 bg-bg-surface border border-white/10 rounded-xl shadow-xl overflow-hidden">
+                  {categories.map((category) => (
+                    <a
+                      key={category.type}
+                      href={`/category/${category.type}`}
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-white/10 transition-colors"
+                      onClick={() => setIsCategoryOpen(false)}
+                    >
+                      <span className="text-xl">{category.icon}</span>
+                      <span>{category.name}</span>
+                    </a>
+                  ))}
+                </div>
+              )}
+            </div>
+
             <a href="/search" className="text-text-secondary hover:text-text-bright transition-colors">
               搜索
             </a>
@@ -150,6 +189,25 @@ export function Header() {
               >
                 首页
               </a>
+              
+              {/* Mobile Categories */}
+              <div className="px-2 py-1">
+                <p className="text-text-muted text-sm mb-2">分类</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {categories.map((category) => (
+                    <a
+                      key={category.type}
+                      href={`/category/${category.type}`}
+                      className="flex items-center gap-2 px-3 py-2 bg-white/5 rounded-lg hover:bg-white/10 transition-colors"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <span>{category.icon}</span>
+                      <span className="text-sm">{category.name}</span>
+                    </a>
+                  ))}
+                </div>
+              </div>
+
               <a
                 href="/search"
                 className="text-text-secondary hover:text-text-bright transition-colors px-2 py-1"

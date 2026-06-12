@@ -139,31 +139,32 @@
 
 | 组件 | 选型 | 说明 |
 |------|------|------|
-| 语言 | Rust | 高性能、内存安全 |
-| 异步运行时 | tokio | 异步IO |
-| Web框架 | axum | HTTP/WebSocket |
+| 语言 | Java 17 | 生态成熟、稳定可靠 |
+| 框架 | Spring Boot 3.2 | 微服务架构 |
 | 数据库 | SQLite | 本地存储 |
 | 缓存 | Redis | 可选 |
-| HTTP客户端 | reqwest | API调用 |
-| XML解析 | quick-xml | B站弹幕解析 |
-| 序列化 | serde | JSON处理 |
+| HTTP客户端 | OkHttp | API调用 |
+| XML解析 | Dom4j | B站弹幕解析 |
+| 序列化 | Jackson | JSON处理 |
+| API文档 | Knife4j | OpenAPI 3.0 |
 
 ---
 
 ## 🚀 快速开始
 
 ```bash
-# 获取影视剧信息
-danmaku-server series search --keyword "三体"
+# 进入 Java 后端目录
+cd java-backend
 
-# 获取剧集列表
-danmaku-server series episodes --id 1
+# 编译项目
+mvn clean package
 
-# 获取弹幕
-danmaku-server danmaku fetch --episode 1
+# 启动弹幕服务
+cd movie-danmaku
+mvn spring-boot:run
 
-# 启动 API 服务器
-danmaku-server serve --port 3000
+# API 服务地址
+# http://localhost:8082
 ```
 
 ---
@@ -171,19 +172,27 @@ danmaku-server serve --port 3000
 ## 📦 项目结构
 
 ```
-backend/
-├── Cargo.toml
-└── src/
-    ├── main.rs
-    ├── models/         # 数据模型
-    ├── provider/       # 数据源提供者
-    │   ├── metadata/   # 元数据Provider
-    │   ├── danmaku/    # 弹幕Provider
-    │   └── image/      # 图片Provider
-    ├── db/             # 数据库
-    ├── cache/          # 缓存
-    ├── server/         # API服务
-    └── crawler/        # 数据采集
+java-backend/
+├── pom.xml                    # 父POM
+├── movie-common/              # 公共模块
+│   └── src/main/java/com/movie/common/
+│       └── result/            # 统一返回结果
+├── movie-user/                # 用户服务
+│   └── src/main/java/com/movie/user/
+│       ├── controller/        # REST API
+│       ├── service/           # 业务逻辑
+│       ├── entity/            # 实体类
+│       └── repository/        # 数据访问
+└── movie-danmaku/             # 弹幕服务
+    └── src/main/java/com/movie/danmaku/
+        ├── provider/          # 弹幕源抽象层
+        ├── parser/            # XML解析
+        ├── entity/            # 数据模型
+        ├── repository/        # 数据库访问
+        ├── service/           # 业务逻辑
+        ├── controller/        # REST API
+        ├── config/            # 配置
+        └── throttle/          # 请求限流
 ```
 
 ---

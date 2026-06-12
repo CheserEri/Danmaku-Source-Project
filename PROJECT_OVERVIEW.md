@@ -31,8 +31,8 @@
 ├─────────────────────────────────────────────────────────────┤
 │                           ↕                                 │
 ├─────────────────────────────────────────────────────────────┐
-│                      API 服务层 (Rust)                       │
-│              axum + tokio + WebSocket                       │
+│                      API 服务层 (Java)                       │
+│          Spring Boot 3 + WebSocket + MyBatis-Plus           │
 ├─────────────────────────────────────────────────────────────┤
 │                           ↕                                 │
 ├─────────────────────────────────────────────────────────────┐
@@ -58,7 +58,6 @@
 | 模块 | 功能 | 状态 |
 |------|------|------|
 | `provider/` | 弹幕源抽象层 | ✅ 已完成 |
-| `crawler/` | 弹幕采集 | ✅ 已完成 |
 | `parser/` | XML解析 | ✅ 已完成 |
 | `db/` | 数据库操作 | ✅ 已完成 |
 | `server/` | HTTP/WebSocket | ✅ 已完成 |
@@ -232,18 +231,21 @@ Danmaku-Source-Project-main/
 ├── DESIGN.md              # 后端设计文档
 ├── FRONTEND.md            # 前端设计文档
 ├── PROJECT_OVERVIEW.md    # 项目总览 (本文件)
-└── backend/               # Rust 后端
-    ├── Cargo.toml
-    └── src/
-        ├── main.rs
-        ├── provider/      # 弹幕源抽象层
-        ├── crawler/       # 弹幕采集
-        ├── parser/        # XML解析
-        ├── models/        # 数据模型
-        ├── db/            # 数据库
-        ├── server/        # HTTP/WebSocket
-        ├── cache/         # Redis缓存
-        └── throttle/      # 请求限流
+└── java-backend/          # Java 后端 (Spring Boot)
+    ├── pom.xml
+    ├── movie-common/      # 公共模块
+    ├── movie-user/        # 用户服务
+    └── movie-danmaku/     # 弹幕服务
+        ├── pom.xml
+        └── src/main/java/com/movie/danmaku/
+            ├── provider/  # 弹幕源抽象层
+            ├── parser/    # XML解析
+            ├── entity/    # 数据模型
+            ├── repository/# 数据库访问
+            ├── service/   # 业务逻辑
+            ├── controller/# REST API
+            ├── config/    # 配置
+            └── throttle/  # 请求限流
 ```
 
 ---

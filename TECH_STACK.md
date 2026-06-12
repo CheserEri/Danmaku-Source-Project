@@ -687,28 +687,19 @@ Danmaku-Source-Project-main/
 ├── java-backend/                    # Java后端
 │   ├── pom.xml                      # 父POM
 │   ├── movie-common/                # 公共模块
-│   ├── movie-gateway/               # API网关
 │   ├── movie-user/                  # 用户服务
-│   ├── movie-series/                # 影视服务
-│   ├── movie-danmaku/               # 弹幕服务
-│   ├── movie-discussion/            # 讨论服务
-│   ├── movie-crawler/               # 采集服务
-│   └── movie-file/                  # 文件服务
+│   └── movie-danmaku/               # 弹幕服务
 │
-├── frontend/                        # Next.js前端
-│   ├── package.json
-│   ├── src/
-│   │   ├── app/                     # 页面
-│   │   ├── components/              # 组件
-│   │   ├── hooks/                   # Hooks
-│   │   ├── lib/                     # 工具函数
-│   │   ├── stores/                  # 状态管理
-│   │   └── types/                   # 类型定义
-│   └── public/                      # 静态资源
-│
-└── backend/                         # Rust后端（保留）
-    ├── Cargo.toml
-    └── src/
+└── frontend/                        # Next.js前端
+    ├── package.json
+    ├── src/
+    │   ├── app/                     # 页面
+    │   ├── components/              # 组件
+    │   ├── hooks/                   # Hooks
+    │   ├── lib/                     # 工具函数
+    │   ├── stores/                  # 状态管理
+    │   └── types/                   # 类型定义
+    └── public/                      # 静态资源
 ```
 
 ---

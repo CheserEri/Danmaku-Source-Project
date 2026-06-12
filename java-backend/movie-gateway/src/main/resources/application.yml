@@ -1,0 +1,53 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: gateway-service
+  cloud:
+    nacos:
+      discovery:
+        server-addr: localhost:8848
+    gateway:
+      discovery:
+        locator:
+          enabled: false
+      routes:
+        - id: user-service
+          uri: lb://user-service
+          predicates:
+            - Path=/api/auth/**, /api/users/**
+          
+        - id: series-service
+          uri: lb://series-service
+          predicates:
+            - Path=/api/series/**, /api/episodes/**, /api/persons/**
+          
+        - id: danmaku-service
+          uri: lb://danmaku-service
+          predicates:
+            - Path=/api/danmakus/**, /api/videos/**
+          
+        - id: discussion-service
+          uri: lb://discussion-service
+          predicates:
+            - Path=/api/discussions/**
+          
+        - id: file-service
+          uri: lb://file-service
+          predicates:
+            - Path=/api/files/**
+
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOriginPatterns: "*"
+            allowedMethods: "*"
+            allowedHeaders: "*"
+            allowCredentials: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway
